@@ -216,6 +216,7 @@ EMAIL_PORT = os.environ.get('EMAIL_PORT', 587)
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', True)
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER',)
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
 
 # ### API-GENERATOR Settings ###
 API_GENERATOR = {
@@ -234,8 +235,12 @@ REST_FRAMEWORK = {
 }
 ########################################
 
-# risky
-SESSION_COOKIE_HTTPONLY=False
+# For Production
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
 MESSAGE_TAGS = {
     messages.INFO: 'text-blue-800 border border-blue-300 bg-blue-50 dark:text-blue-400 dark:border-blue-800',
