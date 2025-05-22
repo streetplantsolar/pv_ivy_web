@@ -25,8 +25,34 @@ const renderPVChart = async (manufacturer, model) => {
             name: 'IV Curve',
             data: ivData
         }],
-        xaxis: { title: { text: 'Voltage (V)' }},
-        yaxis: { title: { text: 'Current (A)' }}
+        xaxis: {
+            title: { text: 'Voltage (V)' },
+            labels: {
+                formatter: function (val) {
+                    return val.toFixed(2);
+                }
+            }
+        },
+        yaxis: {
+            title: { text: 'Current (A)' },
+            labels: {
+                formatter: function (val) {
+                    return val.toFixed(2);
+                }
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return val.toFixed(2);
+                }
+            },
+            x: {
+                formatter: function (val) {
+                    return val.toFixed(2);
+                }
+            }
+        }
     };
 
     const chartDiv = document.getElementById('pv-iv-chart');
@@ -63,8 +89,33 @@ const initPVChart = async () => {
     modelSelect.addEventListener('change', () => {
         const manufacturer = makeSelect.value;
         const model = modelSelect.value;
-        renderPVChart(manufacturer, model);  // call your API + chart function
+        const selected = modules.find(m => m.Manufacturer === manufacturer && m.Model === model);
+        if (selected) {
+            renderPVChart(manufacturer, model);
+            updateModuleTable(selected); // ← ADD THIS LINE
+        }
     });
 };
+
+function updateModuleTable(module) {
+    const tableBody = document.querySelector('#module-info-table tbody');
+    tableBody.innerHTML = ''; // Clear previous rows
+
+    const rows = [
+        ['Model', module.Model],
+        ['Manufacturer', module.Manufacturer],
+        ['Technology', module.Technology],
+        ['Power (W)', module.STC],
+        ['Voc (V)', module.V_oc_ref],
+        ['Isc (A)', module.I_sc_ref],
+        ['Vmp (V)', module.V_mp_ref],
+        ['Imp (A)', module.I_mp_ref],,
+    ];
+
+    rows.forEach(([label, value]) => {
+        const row = `<tr><td>${label}</td><td>${value}</td></tr>`;
+        tableBody.insertAdjacentHTML('beforeend', row);
+    });
+}
 
 document.addEventListener('DOMContentLoaded', initPVChart);

@@ -24,7 +24,25 @@
           <select id="model-select" class="w-full p-2 border border-gray-300 rounded-lg"></select>
         </div>
 
-        <div id="pv-iv-chart" class="w-full h-96 bg-gray-100 rounded-lg"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Chart Column -->
+          <div id="pv-iv-chart" class="w-full h-96 bg-gray-100 rounded-lg"></div>
+          <!-- Table Column -->
+            <div class="bg-white dark:bg-gray-700 rounded-lg p-4 overflow-auto border border-gray-200 dark:border-gray-600">
+              <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Selected Module Info</h4>
+              <table id="module-info-table" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-600 dark:text-gray-300">
+                  <tr>
+                    <th class="px-4 py-2">Parameter</th>
+                    <th class="px-4 py-2">Value</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800">
+                  <!-- Rows populated via charts.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
 
       </div>
     </div>
@@ -36,4 +54,14 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js"></script>
 <script type="module" src="{% static 'assets/charts.js' %}"></script>
+<!-- Initialize DataTable -->
+<script>
+  $(document).ready(function () {
+    $('#module-info-table').DataTable({
+      paging: false,
+      searching: false,
+      info: false
+    });
+  });
+</script>
 {% endblock extra_js %}
