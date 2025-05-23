@@ -1,10 +1,34 @@
 import { fetchModuleData } from './modelData.js';
 
 let currentChart = null;
+let currentManufacturer = null;
+let currentModel = null;
 
 const renderPVChart = async (manufacturer, model) => {
-    const url = `/api/iv-curve/?manufacturer=${encodeURIComponent(manufacturer)}&model=${encodeURIComponent(model)}`;
+    // Get input values and validate
+    const irrInput = document.getElementById('irradiance-input');
+    const tempInput = document.getElementById('temperature-input');
+    const modsInput = document.getElementById('modules-input');
 
+    let irradiance = parseFloat(irrInput.value);
+    let temperature = parseFloat(tempInput.value);
+    let modules = parseInt(modsInput.value);
+
+    // Clamp to safe ranges
+    if (irradiance < 0 || irradiance > 1500 || isNaN(irradiance)) {
+        irradiance = 1000;
+        irrInput.value = irradiance;
+        }
+    if (temperature < -20 || temperature > 100 || isNaN(temperature)) {
+        temperature = 25;
+        tempInput.value = temperature;
+        }
+    if (isNaN(modules) || modules < 1 || modules > 100) {
+        modules = 1;
+        modsInput.value = modules;
+        }
+    
+    const url = `/api/iv-curve/?manufacturer=${encodeURIComponent(manufacturer)}&model=${encodeURIComponent(model)}&temp=${temperature}&irradiance=${irradiance}&modules=${modules}`;
     const res = await fetch(url);
     const data = await res.json();
 
@@ -91,9 +115,20 @@ const initPVChart = async () => {
         const model = modelSelect.value;
         const selected = modules.find(m => m.Manufacturer === manufacturer && m.Model === model);
         if (selected) {
+            currentManufacturer = manufacturer;
+            currentModel = model;
             renderPVChart(manufacturer, model);
-            updateModuleTable(selected); // ← ADD THIS LINE
+            updateModuleTable(selected);
         }
+    });
+
+    // Bind input listeners once (globally), use currentModel/manufacturer
+    ['irradiance-input', 'temperature-input', 'modules-input'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+            if (currentManufacturer && currentModel) {
+                renderPVChart(currentManufacturer, currentModel);
+            }
+        });
     });
 };
 
@@ -109,7 +144,7 @@ function updateModuleTable(module) {
         ['Voc (V)', module.V_oc_ref],
         ['Isc (A)', module.I_sc_ref],
         ['Vmp (V)', module.V_mp_ref],
-        ['Imp (A)', module.I_mp_ref],,
+        ['Imp (A)', module.I_mp_ref],
     ];
 
     rows.forEach(([label, value]) => {
@@ -119,3 +154,8 @@ function updateModuleTable(module) {
 }
 
 document.addEventListener('DOMContentLoaded', initPVChart);
+document.getElementById('reset-stc').addEventListener('click', () => {
+  document.getElementById('irradiance-input').value = 1000;
+  document.getElementById('temperature-input').value = 25;
+  document.getElementById('modules-input').value = 1;
+});

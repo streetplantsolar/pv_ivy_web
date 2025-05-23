@@ -27,8 +27,9 @@ MODULE_CSV_URL = 'https://raw.githubusercontent.com/streetplantsolar/pv_ivy_web/
 def iv_curve_api(request):
     model = request.GET.get('model')
     manufacturer = request.GET.get('manufacturer')
-    temp_cell = float(25)
-    irr = float(1000)
+    temp_cell = float(request.GET.get('temperature',25))
+    irr = int(request.GET.get('irradiance',1000))
+    mods_per_string = int(request.GET.get('modules',1))
 
     df = pd.read_csv(MODULE_CSV_URL)
     match = df[
@@ -68,6 +69,7 @@ def iv_curve_api(request):
                                  photocurrent=IL, saturation_current=I0,
                                  resistance_series=Rs, resistance_shunt=Rsh,
                                  nNsVth=nNsVth)
+    V = V * mods_per_string
 
     return JsonResponse({
         'voltage': V.tolist(),
