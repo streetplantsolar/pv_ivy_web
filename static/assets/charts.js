@@ -28,7 +28,7 @@ const renderPVChart = async (manufacturer, model) => {
         modsInput.value = modules;
         }
     
-    const url = `/api/iv-curve/?manufacturer=${encodeURIComponent(manufacturer)}&model=${encodeURIComponent(model)}&temp=${temperature}&irradiance=${irradiance}&modules=${modules}`;
+    const url = `/api/iv-curve/?manufacturer=${encodeURIComponent(manufacturer)}&model=${encodeURIComponent(model)}&temperature=${temperature}&irradiance=${irradiance}&modules=${modules}`;
     const res = await fetch(url);
     const data = await res.json();
 
@@ -153,9 +153,12 @@ function updateModuleTable(module) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', initPVChart);
 document.getElementById('reset-stc').addEventListener('click', () => {
   document.getElementById('irradiance-input').value = 1000;
   document.getElementById('temperature-input').value = 25;
   document.getElementById('modules-input').value = 1;
+
+  if (currentManufacturer && currentModel) {
+    renderPVChart(currentManufacturer, currentModel);
+  }
 });
