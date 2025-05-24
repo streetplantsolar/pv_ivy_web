@@ -28,6 +28,21 @@ const renderPVChart = async (manufacturer, model) => {
         modules = 1;
         modsInput.value = modules;
         }
+
+    const degInput = document.getElementById('degradation-input');
+    const startDateInput = document.getElementById('start-date-input');
+    const endDateInput = document.getElementById('end-date-input');
+
+    const degradationRate = parseFloat(degInput.value) / 100; // convert % to decimal
+    const startDate = new Date(startDateInput.value);
+    const endDate = new Date(endDateInput.value);
+
+    // Compute difference in years
+    const diffYears = (endDate - startDate) / (365.25 * 24 * 3600 * 1000);
+    const totalDegradation = degradationRate * diffYears;
+
+    // Power-based degradation, so current & voltage scale with sqrt
+    const scalingFactor = Math.sqrt(1 - totalDegradation);
     
     const url = `/api/iv-curve/?manufacturer=${encodeURIComponent(manufacturer)}&model=${encodeURIComponent(model)}&temperature=${temperature}&irradiance=${irradiance}&modules=${modules}`;
     const res = await fetch(url);
@@ -38,8 +53,14 @@ const renderPVChart = async (manufacturer, model) => {
         return;
     }
 
-    const ivData = data.voltage.map((v, i) => ({ x: v, y: data.current[i] }));
-    const powerData = data.voltage.map((v, i) => ({ x: v, y: data.power[i] }));
+    const ivData = data.voltage.map((v, i) => ({
+        x: v * scalingFactor,
+        y: data.current[i] * scalingFactor
+    }));
+    const powerData = data.voltage.map((v, i) => ({
+        x: v * scalingFactor,
+        y: data.power[i] * (1 - totalDegradation)
+    }));
 
     const series = [
         { name: 'IV Curve', data: ivData }
@@ -84,7 +105,11 @@ const renderPVChart = async (manufacturer, model) => {
         series: series,
         xaxis: {
             title: { text: 'Voltage (V)' },
-            labels: { formatter: val => val.toFixed(2) }
+            tickAmount: 10, // Add this
+            labels: {
+            rotate: -45, // Add this
+            formatter: val => val.toFixed(2)
+            }
         },
         yaxis: yaxis,
         tooltip: {
@@ -135,9 +160,13 @@ const initPVChart = async () => {
             updateModuleTable(selected);
         }
     });
-
+    
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('start-date-input').value = today;
+    document.getElementById('end-date-input').value = today;
+    
     // Bind input listeners once (globally), use currentModel/manufacturer
-    ['irradiance-input', 'temperature-input', 'modules-input'].forEach(id => {
+    ['irradiance-input', 'temperature-input', 'modules-input', 'degradation-input', 'start-date-input', 'end-date-input'].forEach(id => {
         document.getElementById(id).addEventListener('change', () => {
             if (currentManufacturer && currentModel) {
                 renderPVChart(currentManufacturer, currentModel);
@@ -178,6 +207,17 @@ document.getElementById('reset-stc').addEventListener('click', () => {
   document.getElementById('irradiance-input').value = 1000;
   document.getElementById('temperature-input').value = 25;
   document.getElementById('modules-input').value = 1;
+
+  if (currentManufacturer && currentModel) {
+    renderPVChart(currentManufacturer, currentModel);
+  }
+});
+
+document.getElementById('reset-degradation').addEventListener('click', () => {
+  document.getElementById('degradation-input').value = 0.5;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('start-date-input').value = today;
+  document.getElementById('end-date-input').value = today;
 
   if (currentManufacturer && currentModel) {
     renderPVChart(currentManufacturer, currentModel);

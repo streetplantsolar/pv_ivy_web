@@ -25,7 +25,7 @@
           <select id="model-select" class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select>
         </div>
 
-        <!-- Input Fields (relocated and restyled) -->
+        <!-- Numeric Inputs: Irradiance, Temperature, Modules -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
             <label for="irradiance-input" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Irradiance (W/m²)</label>
@@ -41,6 +41,7 @@
           </div>
         </div>
 
+        <!-- Action Buttons -->
         <div class="flex justify-end gap-2 mb-4">
           <button id="toggle-power" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
             Toggle Power Curve
@@ -50,10 +51,11 @@
           </button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Chart Column -->
+        <!-- Chart & Table -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <!-- Chart -->
           <div id="pv-iv-chart" class="w-full h-96 bg-gray-100 rounded-lg"></div>
-          <!-- Table Column -->
+          <!-- Table -->
           <div class="bg-white dark:bg-gray-700 rounded-lg p-4 overflow-auto border border-gray-200 dark:border-gray-600">
             <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Selected Module Info</h4>
             <table id="module-info-table" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -64,9 +66,33 @@
                 </tr>
               </thead>
               <tbody class="bg-white dark:bg-gray-800">
-                <!-- Rows populated via charts.js -->
+                <!-- Populated via charts.js -->
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Degradation Inputs & Reset Button -->
+        <div class="mt-4 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-base font-semibold text-gray-700 dark:text-white">Degradation Settings</h4>
+            <button id="reset-degradation" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 dark:bg-gray-600 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-500">
+              Reset Degradation
+            </button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label for="degradation-input" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Degradation Rate (%/year)</label>
+              <input type="number" id="degradation-input" class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="0.5" min="0" step="0.01">
+            </div>
+            <div>
+              <label for="start-date-input" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+              <input type="date" id="start-date-input" class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            </div>
+            <div>
+              <label for="end-date-input" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+              <input type="date" id="end-date-input" class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            </div>
           </div>
         </div>
 
