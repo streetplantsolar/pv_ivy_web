@@ -3,6 +3,7 @@ import { fetchModuleData } from './modelData.js';
 let currentChart = null;
 let currentManufacturer = null;
 let currentModel = null;
+let showPowerCurve = false;
 
 const renderPVChart = async (manufacturer, model) => {
     // Get input values and validate
@@ -38,6 +39,41 @@ const renderPVChart = async (manufacturer, model) => {
     }
 
     const ivData = data.voltage.map((v, i) => ({ x: v, y: data.current[i] }));
+    const powerData = data.voltage.map((v, i) => ({ x: v, y: data.power[i] }));
+
+    const series = [
+        { name: 'IV Curve', data: ivData }
+    ];
+    if (showPowerCurve) {
+        series.push({
+        name: 'Power Curve',
+        data: powerData,
+        yAxis: 1
+        });
+    }
+
+    let yaxis;
+    if (showPowerCurve) {
+        yaxis = [
+            {
+            min: 0,
+            title: { text: 'Current (A)' },
+            labels: { formatter: val => val.toFixed(2) }
+            },
+            {
+            min: 0,
+            opposite: true,
+            title: { text: 'Power (W)' },
+            labels: { formatter: val => val.toFixed(2) }
+            }
+        ];
+        } else {
+        yaxis = {
+            min: 0,
+            title: { text: 'Current (A)' },
+            labels: { formatter: val => val.toFixed(2) }
+        };
+    }
 
     const options = {
         chart: {
@@ -45,37 +81,15 @@ const renderPVChart = async (manufacturer, model) => {
             height: 420,
             toolbar: { show: false }
         },
-        series: [{
-            name: 'IV Curve',
-            data: ivData
-        }],
+        series: series,
         xaxis: {
             title: { text: 'Voltage (V)' },
-            labels: {
-                formatter: function (val) {
-                    return val.toFixed(2);
-                }
-            }
+            labels: { formatter: val => val.toFixed(2) }
         },
-        yaxis: {
-            title: { text: 'Current (A)' },
-            labels: {
-                formatter: function (val) {
-                    return val.toFixed(2);
-                }
-            }
-        },
+        yaxis: yaxis,
         tooltip: {
-            y: {
-                formatter: function (val) {
-                    return val.toFixed(2);
-                }
-            },
-            x: {
-                formatter: function (val) {
-                    return val.toFixed(2);
-                }
-            }
+            y: { formatter: val => val.toFixed(2) },
+            x: { formatter: val => val.toFixed(2) }
         }
     };
 
@@ -153,6 +167,13 @@ function updateModuleTable(module) {
     });
 }
 
+document.getElementById('toggle-power').addEventListener('click', () => {
+  showPowerCurve = !showPowerCurve;
+  if (currentManufacturer && currentModel) {
+    renderPVChart(currentManufacturer, currentModel);
+  }
+});
+
 document.getElementById('reset-stc').addEventListener('click', () => {
   document.getElementById('irradiance-input').value = 1000;
   document.getElementById('temperature-input').value = 25;
@@ -162,3 +183,5 @@ document.getElementById('reset-stc').addEventListener('click', () => {
     renderPVChart(currentManufacturer, currentModel);
   }
 });
+
+document.addEventListener('DOMContentLoaded', initPVChart);

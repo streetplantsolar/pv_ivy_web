@@ -19,52 +19,56 @@
           </div>
         </div>
 
+        <!-- Module Selection -->
         <div class="flex gap-4 mb-4">
-          <select id="make-select" class="w-full p-2 border border-gray-300 rounded-lg"></select>
-          <select id="model-select" class="w-full p-2 border border-gray-300 rounded-lg"></select>
+          <select id="make-select" class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select>
+          <select id="model-select" class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select>
         </div>
 
-        <div class="card mb-4">
-          <div class="card-body">
-            <div class="row">
-              <div class="col-md-4">
-                <label for="irradiance-input">Irradiance (W/m²)</label>
-                <input type="number" id="irradiance-input" class="form-control" value="1000" min="0" max = "1500" step="1">
-              </div>
-              <div class="col-md-4">
-                <label for="temperature-input">Cell Temperature (°C)</label>
-                <input type="number" id="temperature-input" class="form-control" value="25" min="-20" max="100" step="1">
-              </div>
-              <div class="col-md-4">
-                <label for="modules-input">Modules per String</label>
-                <input type="number" id="modules-input" class="form-control" value="1" min="1" max="100" step="1">
-              </div>
-            </div>
+        <!-- Input Fields (relocated and restyled) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label for="irradiance-input" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Irradiance (W/m²)</label>
+            <input type="number" id="irradiance-input" class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="1000" min="0" max="1500" step="1">
+          </div>
+          <div>
+            <label for="temperature-input" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Cell Temperature (°C)</label>
+            <input type="number" id="temperature-input" class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="25" min="-20" max="100" step="1">
+          </div>
+          <div>
+            <label for="modules-input" class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Modules per String</label>
+            <input type="number" id="modules-input" class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="1" min="1" max="100" step="1">
           </div>
         </div>
-        <div class="text-end mt-3">
-          <button id="reset-stc" class="btn btn-outline-secondary">Reset to STC</button>
+
+        <div class="flex justify-end gap-2 mb-4">
+          <button id="toggle-power" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+            Toggle Power Curve
+          </button>
+          <button id="reset-stc" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+            Reset to STC
+          </button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Chart Column -->
           <div id="pv-iv-chart" class="w-full h-96 bg-gray-100 rounded-lg"></div>
           <!-- Table Column -->
-            <div class="bg-white dark:bg-gray-700 rounded-lg p-4 overflow-auto border border-gray-200 dark:border-gray-600">
-              <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Selected Module Info</h4>
-              <table id="module-info-table" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-600 dark:text-gray-300">
-                  <tr>
-                    <th class="px-4 py-2">Parameter</th>
-                    <th class="px-4 py-2">Value</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-gray-800">
-                  <!-- Rows populated via charts.js -->
-                </tbody>
-              </table>
-            </div>
+          <div class="bg-white dark:bg-gray-700 rounded-lg p-4 overflow-auto border border-gray-200 dark:border-gray-600">
+            <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Selected Module Info</h4>
+            <table id="module-info-table" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+              <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-600 dark:text-gray-300">
+                <tr>
+                  <th class="px-4 py-2">Parameter</th>
+                  <th class="px-4 py-2">Value</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white dark:bg-gray-800">
+                <!-- Rows populated via charts.js -->
+              </tbody>
+            </table>
           </div>
+        </div>
 
       </div>
     </div>
@@ -74,9 +78,14 @@
 {% endblock content %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js"></script>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- DataTables CSS & JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<!-- ApexCharts + your custom chart script -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script type="module" src="{% static 'assets/charts.js' %}"></script>
-<!-- Initialize DataTable -->
 <script>
   $(document).ready(function () {
     $('#module-info-table').DataTable({

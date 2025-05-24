@@ -70,8 +70,10 @@ def iv_curve_api(request):
                                  resistance_series=Rs, resistance_shunt=Rsh,
                                  nNsVth=nNsVth)
     V = V * mods_per_string
+    P = I * V
 
     return JsonResponse({
         'voltage': V.tolist(),
-        'current': I.tolist()
+        'current': I.tolist(),
+        'power': P.tolist()
     })
