@@ -49,6 +49,9 @@
           <button id="reset-stc" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
             Reset to STC
           </button>
+          <button id="open-user-data-modal" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+            Add Measured Data
+          </button>
         </div>
 
         <!-- Chart & Table -->
@@ -100,6 +103,44 @@
     </div>
   </div>
 </main>
+
+<!-- User Data Modal -->
+<div id="user-data-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-4 w-full max-w-2xl max-h-[90vh] overflow-auto">
+    <div class="flex justify-between items-center mb-2">
+      <h4 class="text-base font-semibold text-gray-700 dark:text-white">Add Measured Data</h4>
+      <button id="close-user-data-modal" class="text-gray-700 dark:text-gray-300">&times;</button>
+    </div>
+    <div class="mb-2">
+      <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Paste Voltage & Current Data (tab or space separated):</label>
+      <textarea id="user-data-textarea" rows="5" class="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+    </div>
+    <div class="flex justify-between items-center mb-2">
+      <div class="flex gap-2">
+        <button id="parse-user-data" class="px-2 py-1 border rounded bg-green-500 text-white">Parse Data</button>
+        <button id="clear-user-data" class="px-2 py-1 border rounded bg-red-500 text-white">Clear Data</button>
+      </div>
+      <span class="text-xs text-gray-500 dark:text-gray-400">Max 500 rows</span>
+    </div>
+    <div class="overflow-auto max-h-64 border border-gray-300 dark:border-gray-600 rounded mb-2">
+      <table id="user-data-table" class="w-full text-sm text-gray-800 dark:text-gray-300">
+        <thead>
+          <tr class="bg-gray-100 dark:bg-gray-700">
+            <th>Voltage (V)</th>
+            <th>Current (A)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+    </div>
+    <div class="flex justify-end">
+      <button id="cancel-user-data" class="px-2 py-1 border rounded mr-2">Cancel</button>
+      <button id="save-user-data" class="px-2 py-1 border rounded bg-blue-500 text-white">Save & Overlay</button>
+    </div>
+  </div>
+</div>
 
 {% endblock content %}
 
