@@ -218,7 +218,7 @@ document.getElementById('cancel-user-data').addEventListener('click', () => {
 });
 document.getElementById('parse-user-data').addEventListener('click', () => {
   const text = document.getElementById('user-data-textarea').value.trim();
-  const lines = text.split('\n').slice(0, 500); // Limit to 500 rows
+  const lines = text.split('\n').slice(0, 5000); // Limit to 5000 rows
   const tbody = document.querySelector('#user-data-table tbody');
   tbody.innerHTML = '';
   lines.forEach(line => {
