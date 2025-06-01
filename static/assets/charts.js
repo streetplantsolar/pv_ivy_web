@@ -298,4 +298,116 @@ document.getElementById('save-user-data').addEventListener('click', () => {
   document.getElementById('user-data-modal').classList.add('hidden');
 });
 
+document.getElementById('detect-anomaly').addEventListener('click', async () => {
+  if (!window.currentChart) return;
+
+  // Get measured data from the chart
+  const measuredSeriesObj = measuredSeries[0];
+  if (!measuredSeriesObj) {
+    document.getElementById('anomaly-output').innerText = 'Please upload measured data.';
+    return;
+  }
+
+  const measured_voltage = measuredSeriesObj.data.map(pt => pt.x);
+  const measured_current = measuredSeriesObj.data.map(pt => pt.y);
+
+  // Get modeled data
+  const modeledSeries = window.currentChart.w.globals.initialSeries.filter(s => s.name === 'IV Curve')[0];
+  if (!modeledSeries || !modeledSeries.data || !modeledSeries.data.length) {
+    document.getElementById('anomaly-output').innerText = 'Modeled data is not available for anomaly detection.';
+    return;
+  }
+
+  const modeled_voltage = modeledSeries.data.map(pt => pt.x);
+  const modeled_current = modeledSeries.data.map(pt => pt.y);
+
+  // Send to backend for anomaly detection
+  const response = await fetch('/api/detect-anomaly/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      measured_voltage,
+      measured_current,
+      modeled_voltage,
+      modeled_current,
+      module_type_code: 0
+    })
+  });
+  const data = await response.json();
+
+  // Updated logic for output:
+  const outputEl = document.getElementById('anomaly-output');
+  if (data.anomaly) {
+    if (data.anomaly === 'Healthy') {
+      // Show green check icon
+      outputEl.innerHTML = `✅ No Anomaly Detected`;
+    } else {
+      // Show yellow warning icon and custom text
+      outputEl.innerHTML = `⚠️ Possible Anomaly: ${data.anomaly}`;
+    }
+  } else if (data.error) {
+    outputEl.innerText = data.error;
+  }
+});
+
+
+// Helper function to convert dataURI to a real PNG Blob
+function dataURItoBlob(dataURI) {
+  const byteString = atob(dataURI.split(',')[1]);
+  const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  return new Blob([ab], { type: mimeString });
+}
+
+// Helper: remove any existing listener by cloning the button
+function removeExistingListeners(buttonId) {
+  const oldEl = document.getElementById(buttonId);
+  const newEl = oldEl.cloneNode(true);
+  oldEl.parentNode.replaceChild(newEl, oldEl);
+}
+
+removeExistingListeners('download-plot');
+document.getElementById('download-plot').addEventListener('click', async () => {
+  if (!window.currentChart) {
+    alert('No chart to export!');
+    return;
+  }
+
+  const { imgURI } = await window.currentChart.dataURI();
+  const link = document.createElement('a');
+  const chartTitle = `${currentManufacturer} - ${currentModel}`.replace(/[^a-zA-Z0-9]/g, '_');
+  link.download = `${chartTitle}.png`;
+  link.href = imgURI;
+  link.click();
+});
+
+removeExistingListeners('copy-plot');
+document.getElementById('copy-plot').addEventListener('click', async () => {
+  if (!window.currentChart) {
+    alert('No chart to export!');
+    return;
+  }
+
+  const { imgURI } = await window.currentChart.dataURI();
+  const realBlob = dataURItoBlob(imgURI);
+
+  if (navigator.clipboard && window.ClipboardItem) {
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': realBlob })
+      ]);
+      alert('Plot copied to clipboard!');
+    } catch (err) {
+      console.warn('Clipboard API failed:', err);
+      alert('Could not copy to clipboard.');
+    }
+  } else {
+    alert('Clipboard API not supported.');
+  }
+});
+
 document.addEventListener('DOMContentLoaded', initPVChart);

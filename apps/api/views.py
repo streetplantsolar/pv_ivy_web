@@ -4,9 +4,12 @@ from rest_framework import viewsets
 from rest_framework import permissions
 
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from apps.api.anomaly_classifier import extract_iv_features
 import pandas as pd
 import numpy as np
 import pvlib
+import joblib
 
 
 class ProductPermission(permissions.BasePermission):
@@ -77,3 +80,49 @@ def iv_curve_api(request):
         'current': I.tolist(),
         'power': P.tolist()
     })
+
+@csrf_exempt  # Only for dev; use proper CSRF token in prod
+def detect_anomaly_api(request):
+    if request.method == 'POST':
+        # Read JSON payload
+        import json
+        data = json.loads(request.body)
+
+        measured_voltage = np.array(data.get('measured_voltage', []))
+        measured_current = np.array(data.get('measured_current', []))
+        modeled_voltage = np.array(data.get('modeled_voltage', []))
+        modeled_current = np.array(data.get('modeled_current', []))
+        module_type_code = data.get('module_type_code', 0)  # Example default
+
+        # Check measured data presence
+        if measured_voltage.size == 0 or measured_current.size == 0:
+            return JsonResponse({'error': 'Please upload measured data.'})
+
+        P_modeled = modeled_voltage * modeled_current
+        max_power_index = np.argmax(P_modeled)
+
+        nameplate = {
+            'I_sc_ref': max(modeled_current),
+            'V_oc_ref': max(modeled_voltage),
+            'I_mp_ref': modeled_current[max_power_index],
+            'V_mp_ref': modeled_voltage[max_power_index],
+        }
+        measured_features = extract_iv_features(measured_voltage, measured_current, nameplate)
+        measured_features['module_type_code'] = module_type_code
+
+        feature_vector = pd.DataFrame([measured_features])
+
+        # Load models
+        scaler = joblib.load('scaler.pkl')
+        classifier = joblib.load('random_forest_classifier.pkl')
+
+        # Reindex columns to match exactly what the scaler was trained with
+        expected_features = scaler.feature_names_in_
+        feature_vector = feature_vector.reindex(columns=expected_features).fillna(0)
+
+        scaled_features = scaler.transform(feature_vector)
+        prediction = classifier.predict(scaled_features)[0]
+
+        return JsonResponse({'anomaly': prediction})
+
+    return JsonResponse({'error': 'Invalid request method'})

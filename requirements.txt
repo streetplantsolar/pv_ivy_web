@@ -5,6 +5,10 @@ str2bool==1.1
 pandas==2.2.2
 numpy==1.26.4
 pvlib==0.10.4
+joblib==1.5.1
+matplotlib==3.10.3
+scikit-learn==1.6.1
+scipy==1.15.3
 
 # Utils
 django-debug-toolbar==4.2.0
