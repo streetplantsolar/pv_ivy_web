@@ -4,6 +4,7 @@ let currentChart = null;
 let currentManufacturer = null;
 let currentModel = null;
 let showPowerCurve = false;
+let measuredSeries = [];
 
 const renderPVChart = async (manufacturer, model) => {
   // Input fields
@@ -57,14 +58,18 @@ const renderPVChart = async (manufacturer, model) => {
     y: data.power[i] * (1 - totalDegradation)
   }));
 
-  const series = [{ name: 'IV Curve', data: ivData }];
+  // Modeled series
+  const modeledSeries = [{ name: 'IV Curve', data: ivData }];
   if (showPowerCurve) {
-    series.push({
+    modeledSeries.push({
       name: 'Power Curve',
       data: powerData,
       yAxis: 1
     });
   }
+
+  // Combine with any measured data series (preserved globally)
+  const fullSeries = [...modeledSeries, ...measuredSeries];
 
   const yaxis = showPowerCurve
     ? [
@@ -88,7 +93,7 @@ const renderPVChart = async (manufacturer, model) => {
 
   const options = {
     chart: { type: 'line', height: 420, toolbar: { show: false } },
-    series: series,
+    series: fullSeries,
     xaxis: {
       title: { text: 'Voltage (V)' },
       tickAmount: 10,
@@ -104,10 +109,15 @@ const renderPVChart = async (manufacturer, model) => {
   const chartDiv = document.getElementById('pv-iv-chart');
   if (chartDiv) {
     if (window.currentChart) {
-      window.currentChart.destroy();
+      // ✅ Update only the series and yaxis (preserve zoom, etc.)
+      window.currentChart.updateOptions({
+        series: fullSeries,
+        yaxis: yaxis
+      });
+    } else {
+      window.currentChart = new ApexCharts(chartDiv, options);
+      window.currentChart.render();
     }
-    window.currentChart = new ApexCharts(chartDiv, options);
-    window.currentChart.render();
   }
 };
 
@@ -180,6 +190,12 @@ function updateModuleTable(module) {
   });
 }
 
+document.getElementById('reset-zoom').addEventListener('click', () => {
+  if (window.currentChart) {
+    window.currentChart.resetSeries(true);
+  }
+});
+
 document.getElementById('toggle-power').addEventListener('click', () => {
   showPowerCurve = !showPowerCurve;
   if (currentManufacturer && currentModel) {
@@ -251,25 +267,34 @@ document.getElementById('save-user-data').addEventListener('click', () => {
       userData.push({ x: voltage, y: current });
     }
   });
-    if (window.currentChart && userData.length) {
+
+  if (window.currentChart && userData.length) {
     let existingSeries = window.currentChart.w.config.series || [];
 
     // Remove existing "Measured Data" series
     existingSeries = existingSeries.filter(series => series.name !== 'Measured Data');
 
+    // Create the new Measured Data series
+    const measuredDataSeries = {
+      name: 'Measured Data',
+      data: userData,
+      type: 'line',
+      color: '#FF0000'
+    };
+
+    //  Save measured data globally
+    measuredSeries = [measuredDataSeries];
+
+    //  Merge it into the chart
     const updatedSeries = [
-        ...existingSeries,
-        {
-        name: 'Measured Data',
-        data: userData,
-        type: 'line',
-        color: '#FF0000'
-        }
+      ...existingSeries,
+      measuredDataSeries
     ];
+
     window.currentChart.updateOptions({
-        series: updatedSeries
+      series: updatedSeries
     });
-    }
+  }
   document.getElementById('user-data-modal').classList.add('hidden');
 });
 
