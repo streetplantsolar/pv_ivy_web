@@ -58,6 +58,38 @@ const renderPVChart = async (manufacturer, model) => {
     y: data.power[i] * (1 - totalDegradation)
   }));
 
+  // Calculate modeled values for the table
+  const modeledVoc = Math.max(...data.voltage) * scalingFactor;
+  const modeledIsc = Math.max(...data.current) * scalingFactor;
+
+  const powerValues = data.voltage.map((v, i) => v * data.current[i]);
+  const maxPowerIndex = powerValues.indexOf(Math.max(...powerValues));
+  const modeledVmp = data.voltage[maxPowerIndex] * scalingFactor;
+  const modeledImp = data.current[maxPowerIndex] * scalingFactor;
+  const modeledPmp = modeledVmp * modeledImp * (1 - totalDegradation);
+
+  const tableBody = document.querySelector('#module-info-table tbody');
+  tableBody.querySelectorAll('tr').forEach(row => {
+    const label = row.cells[0].innerText;
+    switch (label) {
+      case 'Power (W)':
+        row.cells[1].innerText = modeledPmp.toFixed(2);
+        break;
+      case 'Voc (V)':
+        row.cells[1].innerText = modeledVoc.toFixed(2);
+        break;
+      case 'Isc (A)':
+        row.cells[1].innerText = modeledIsc.toFixed(2);
+        break;
+      case 'Vmp (V)':
+        row.cells[1].innerText = modeledVmp.toFixed(2);
+        break;
+      case 'Imp (A)':
+        row.cells[1].innerText = modeledImp.toFixed(2);
+        break;
+    }
+  });
+
   // Modeled series
   const modeledSeries = [{ name: 'IV Curve', data: ivData }];
   if (showPowerCurve) {
@@ -190,6 +222,7 @@ function updateModuleTable(module) {
   });
 }
 
+
 document.getElementById('reset-zoom').addEventListener('click', () => {
   if (window.currentChart) {
     window.currentChart.resetSeries(true);
@@ -253,10 +286,28 @@ document.getElementById('parse-user-data').addEventListener('click', () => {
     }
   });
 });
+
 document.getElementById('clear-user-data').addEventListener('click', () => {
   document.getElementById('user-data-textarea').value = '';
   document.querySelector('#user-data-table tbody').innerHTML = '';
+  // Clear the globally tracked measured data
+  measuredSeries = [];
+  if (window.currentChart) {
+    // Remove measured data from the chart by updating the series
+    const modeledSeriesOnly = window.currentChart.w.config.series.filter(
+      s => s.name !== 'Measured Data'
+    );
+    window.currentChart.updateOptions({
+      series: modeledSeriesOnly
+    });
+    //  ApexCharts quirk: forcibly clear internal series state
+    // by fully resetting chart data
+    window.currentChart.updateSeries(modeledSeriesOnly, true);
+  }
+  // Remove the measured column from the table
+  updateMeasuredColumn(null);
 });
+
 document.getElementById('save-user-data').addEventListener('click', () => {
   const rows = document.querySelectorAll('#user-data-table tbody tr');
   const userData = [];
@@ -294,6 +345,28 @@ document.getElementById('save-user-data').addEventListener('click', () => {
     window.currentChart.updateOptions({
       series: updatedSeries
     });
+
+    // Calculate measured data values
+    const measured_voltage = userData.map(pt => pt.x);
+    const measured_current = userData.map(pt => pt.y);
+    const measuredVoc = Math.max(...measured_voltage);
+    const measuredIsc = Math.max(...measured_current);
+    const powerMeasured = measured_voltage.map((v, i) => v * measured_current[i]);
+    const maxPowerIndexMeasured = powerMeasured.indexOf(Math.max(...powerMeasured));
+    const measuredVmp = measured_voltage[maxPowerIndexMeasured];
+    const measuredImp = measured_current[maxPowerIndexMeasured];
+    const measuredPmp = measuredVmp * measuredImp;
+
+    const measuredData = {
+      voc: measuredVoc,
+      isc: measuredIsc,
+      vmp: measuredVmp,
+      imp: measuredImp,
+      power: measuredPmp
+    };
+
+    // Update the module table with the measured column
+    updateMeasuredColumn(measuredData);
   }
   document.getElementById('user-data-modal').classList.add('hidden');
 });
@@ -350,6 +423,51 @@ document.getElementById('detect-anomaly').addEventListener('click', async () => 
   }
 });
 
+function updateMeasuredColumn(measuredData) {
+  const table = document.querySelector('#module-info-table');
+  const headerRow = table.querySelector('thead tr');
+  const rows = table.querySelectorAll('tbody tr');
+
+  if (measuredData) {
+    // Add Measured column if missing
+    if (headerRow.cells.length < 3) {
+      const th = document.createElement('th');
+      th.innerText = 'Measured';
+      headerRow.appendChild(th);
+
+      rows.forEach(row => {
+        const measuredCell = document.createElement('td');
+        measuredCell.innerText = '-';
+        row.appendChild(measuredCell);
+      });
+    }
+
+    // Update Measured values
+    const labelsToUpdate = ['Power (W)', 'Voc (V)', 'Isc (A)', 'Vmp (V)', 'Imp (A)'];
+    rows.forEach(row => {
+      const label = row.cells[0].innerText;
+      if (labelsToUpdate.includes(label)) {
+        let measuredValue;
+        switch (label) {
+          case 'Power (W)': measuredValue = measuredData.power; break;
+          case 'Voc (V)': measuredValue = measuredData.voc; break;
+          case 'Isc (A)': measuredValue = measuredData.isc; break;
+          case 'Vmp (V)': measuredValue = measuredData.vmp; break;
+          case 'Imp (A)': measuredValue = measuredData.imp; break;
+        }
+        row.cells[2].innerText = measuredValue.toFixed(2);
+      }
+    });
+  } else {
+    // Remove Measured column
+    if (headerRow.cells.length === 3) {
+      headerRow.removeChild(headerRow.lastChild);
+      rows.forEach(row => {
+        row.removeChild(row.lastChild);
+      });
+    }
+  }
+}
 
 // Helper function to convert dataURI to a real PNG Blob
 function dataURItoBlob(dataURI) {

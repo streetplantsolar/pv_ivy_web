@@ -24,7 +24,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 from django.views.static import serve 
 
 urlpatterns = [
-    path("", include("home.urls")),
+    path("", include("apps.pages.urls")),
     path("admin/", admin.site.urls),
     path("api/", include("apps.api.urls")),
     path("users/", include("apps.users.urls")),
