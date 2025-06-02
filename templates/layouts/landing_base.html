@@ -1,0 +1,14 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% include "includes/head.html" %}
+  {% block extrastyle %}{% endblock extrastyle %}
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-800">
+  {% block content %}{% endblock content %}
+  {% include "includes/scripts.html" %}
+</body>
+</html>

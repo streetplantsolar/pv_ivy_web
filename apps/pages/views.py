@@ -3,6 +3,9 @@ from django.shortcuts import render
 from django.core.mail import send_mail
 from django.conf import settings
 
+def landing_view(request):
+    return render(request, "pages/starter.html")
+
 def contact_view(request):
     message_sent = False
 
