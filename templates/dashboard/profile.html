@@ -64,7 +64,7 @@
                     <div class="mb-4 text-sm text-gray-500 dark:text-gray-400">
                         JPG, GIF or PNG. Max size of 800K
                     </div>
-                    <form method="post" action="{% url "upload_avatar" %}" enctype="multipart/form-data" class="flex items-center space-x-4">
+                    <form method="post" action="{% url "users:upload_avatar" %}" enctype="multipart/form-data" class="flex items-center space-x-4">
                         {% csrf_token %}
                         <label for="avatar">
                             <div class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-blue-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
@@ -103,7 +103,7 @@
         </div>
         <div class="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
             <h3 class="mb-4 text-xl font-semibold dark:text-white">Password information</h3>
-            <form method="post" action="{% url "change_password" %}">
+            <form method="post" action="{% url "users:change_password" %}">
                 {% csrf_token %}
 
                 <div class="grid grid-cols-6 gap-6">
